@@ -3,47 +3,101 @@
  */
 
 plugins {
-    `java`
+    `application`
     `java-library`
-    `maven-publish`
+    `java`
     `signing` // pour signer les artefacts, requis pour Maven Central
+    id("eu.kakde.gradle.sonatype-maven-central-publisher") version "1.0.6"
 }
 
+application {
+    mainClass="io.github.edemairy.Main"
+}
 
-publishing {
-    publications.create<MavenPublication>("test_maven") {
-        from(components["java"])
-    }
+java {
+    withJavadocJar()
+    withSourcesJar()
+}
 
-    repositories {
-        mavenLocal()
-        maven {
-            name = "ossrh"
-            url = uri("https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/")
-            credentials {
-                val user = project.properties["ossrhUsername"]
-                val password = project.properties["ossrhPassword"]
+object Meta {
+    val COMPONENT_TYPE = "java" // "java" or "versionCatalog"
+    val GROUP = "io.github.erwandemairy"
+    val ARTIFACT_ID = "test_maven"
+    val VERSION = "1.0.0"
+    val PUBLISHING_TYPE = "AUTOMATIC" // USER_MANAGED or AUTOMATIC
+    val SHA_ALGORITHMS = listOf("SHA-256", "SHA-512") // sha256 and sha512 are supported but not mandatory. Only sha1 is mandatory but it is supported by default.
+    val DESC = "GitHub Version Catalog Repository for Personal Projects based on Gradle"
+    val LICENSE = "Apache-2.0"
+    val LICENSE_URL = "https://opensource.org/licenses/Apache-2.0"
+    val GITHUB_REPO = "ErwanDemairy/test_maven.git"
+    val DEVELOPER_ID = "ErwanDemairy"
+    val DEVELOPER_NAME = "Erwan Demairy"
+    val DEVELOPER_ORGANIZATION = "inria.fr"
+    val DEVELOPER_ORGANIZATION_URL = "https://www.inria.fr"
+}
+
+val sonatypeUsername: String? by project // this is defined in ~/.gradle/gradle.properties
+val sonatypePassword: String? by project // this is defined in ~/.gradle/gradle.properties
+
+sonatypeCentralPublishExtension {
+    // Set group ID, artifact ID, version, and other publication details
+    groupId.set(Meta.GROUP)
+    artifactId.set(Meta.ARTIFACT_ID)
+    version.set(Meta.VERSION)
+    componentType.set(Meta.COMPONENT_TYPE) // "java" or "versionCatalog"
+    publishingType.set(Meta.PUBLISHING_TYPE) // USER_MANAGED or AUTOMATIC
+
+    // Set username and password for Sonatype repository
+    username.set(System.getenv("SONATYPE_USERNAME") ?: sonatypeUsername)
+    password.set(System.getenv("SONATYPE_PASSWORD") ?: sonatypePassword)
+
+    println("username = ${username.get()}")
+    println("sonatypeUsername = $sonatypeUsername")
+    println("password = ${password.get()}")
+    println("sonatypePassword = ${sonatypePassword}")
+    // Configure POM metadata
+    pom {
+        name.set(Meta.ARTIFACT_ID)
+        description.set(Meta.DESC)
+        url.set("https://github.com/${Meta.GITHUB_REPO}")
+        licenses {
+            license {
+                name.set(Meta.LICENSE)
+                url.set(Meta.LICENSE_URL)
             }
+        }
+        developers {
+            developer {
+                id.set(Meta.DEVELOPER_ID)
+                name.set(Meta.DEVELOPER_NAME)
+                organization.set(Meta.DEVELOPER_ORGANIZATION)
+                organizationUrl.set(Meta.DEVELOPER_ORGANIZATION_URL)
+            }
+        }
+        scm {
+            url.set("https://github.com/${Meta.GITHUB_REPO}")
+            connection.set("scm:git:https://github.com/${Meta.GITHUB_REPO}")
+            developerConnection.set("scm:git:https://github.com/${Meta.GITHUB_REPO}")
+        }
+        issueManagement {
+            system.set("GitHub")
+            url.set("https://github.com/${Meta.GITHUB_REPO}/issues")
         }
     }
 }
+
 signing {
-    sign(publishing.publications["test_maven"])
+//    val keyId = properties.getValue("signing.keyId") as String
+//    val password = properties.getValue("signing.password") as String
+//    useInMemoryPgpKeys(keyId, password)
+//    sign(publishing.publications["test_maven"])
+//    useGpgCmd()
 }
 
 
-
-
-
-
-
-
-
-
-
-group = "io.github.edemairy"
+group = "io.github.erwandemairy"
 version = "0.0.1-SNAPSHOT"
-description = "Maven core"
-java.sourceCompatibility = JavaVersion.VERSION_1_8
+description = "Maven Test"
+java.sourceCompatibility = JavaVersion.VERSION_11
 
 
